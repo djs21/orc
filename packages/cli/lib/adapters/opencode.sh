@@ -32,11 +32,20 @@ _adapter_inject_persona() {
   external_directory: allow"
   fi
 
+  # Resolve model override from config (empty = use opencode's global default)
+  local model=""
+  model="$(_config_get "models.${role}")"
+  local model_line=""
+  if [[ -n "$model" ]]; then
+    model_line="model: ${model}
+"
+  fi
+
   cat > "$agent_file" <<AGENT_EOF
 ---
 description: "orc ${role} agent"
 mode: primary
-${permission_block}
+${model_line}${permission_block}
 ---
 
 ${persona_content}

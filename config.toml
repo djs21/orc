@@ -17,6 +17,18 @@ yolo_flags = ""                  # auto-accept flags per agent (--yolo); empty =
                                  # codex=--dangerously-bypass-approvals-and-sandbox, gemini=--yolo
 max_workers = 3
 
+# ─── MODELS ─────────────────────────────────────────────────────────────────
+# Assign specific AI models to each agent role. The `model` field is injected
+# into OpenCode agent YAML front-matter at spawn time.
+# Run `opencode models` to see available models and their provider/model-id format.
+# When unset, each role uses the global default model from OpenCode.
+#
+# [models]
+# orchestrator = "opencode-go/glm-5.1"         # project-level planning
+# goal-orchestrator = "opencode-go/deepseek-v4-pro"   # bead dispatch & review loop
+# engineer = "opencode-go/deepseek-v4-flash"          # fast coding loops
+# reviewer = "opencode-go/claude-sonnet-4"            # code quality analysis
+
 # ─── PLANNING ─────────────────────────────────────────────────────────────────
 # These fields control the planning phase BEFORE engineers are dispatched.
 # The goal orchestrator reads them but delegates execution to sub-agents.

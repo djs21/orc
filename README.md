@@ -339,6 +339,30 @@ Set `agent_cmd = "auto"` to let orc detect the first installed CLI, or set it ex
 </details>
 
 <details>
+<summary><strong>Using different AI models per role (OpenCode only)</strong></summary>
+
+Assign specific models to each orc role via `[models]` in config. Each role gets the best model for its task:
+
+```toml
+[models]
+orchestrator = "opencode-go/glm-5.1"
+goal-orchestrator = "opencode-go/deepseek-v4-pro"
+engineer = "opencode-go/deepseek-v4-flash"
+reviewer = "opencode-go/claude-sonnet-4"
+```
+
+- **orchestrator**: strategic planning, goal decomposition → strong reasoning model
+- **goal-orchestrator**: bead dispatch, review coordination → balanced model
+- **engineer**: fast coding loops → cost-effective fast model
+- **reviewer**: code quality analysis → precise review model
+
+Config follows the standard resolution chain: `{project}/.orc/config.toml` → `config.local.toml` → `config.toml`. When `[models]` is not configured, agents use the global default model.
+
+Run `opencode models` to see available models and their `provider/model-id` format.
+
+</details>
+
+<details>
 <summary><strong>How do I know which CLI orc picked?</strong></summary>
 
 When `agent_cmd = "auto"`, orc logs which CLI it detected on first use (e.g., `Auto-detected agent CLI: claude`). This appears once per orc command invocation. To check your resolved config at any time, look at the startup output or set the CLI explicitly to remove ambiguity.
