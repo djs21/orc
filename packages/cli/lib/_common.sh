@@ -1474,7 +1474,7 @@ ${initial_prompt}"
 
   # Inject persona into worktree (for file-based CLIs like OpenCode, Gemini)
   if [[ -n "$working_dir" ]]; then
-    _adapter_inject_persona "$persona" "$working_dir" "$role"
+    _adapter_inject_persona "$persona" "$working_dir" "$role" "$project_path"
   fi
 
   # Pre-launch hook

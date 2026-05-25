@@ -10,6 +10,7 @@ _adapter_inject_persona() {
   local persona_content="$1"
   local worktree_path="$2"
   local role="${3:-engineer}"
+  local project_path="${4:-}"
 
   local agents_dir="$worktree_path/.opencode/agents"
   mkdir -p "$agents_dir"
@@ -34,7 +35,7 @@ _adapter_inject_persona() {
 
   # Resolve model override from config (empty = use opencode's global default)
   local model=""
-  model="$(_config_get "models.${role}")"
+  model="$(_config_get "models.${role}" "" "$project_path")"
   local model_line=""
   if [[ -n "$model" ]]; then
     model_line="model: ${model}
