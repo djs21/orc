@@ -192,6 +192,6 @@ fi
 after=""
 after="$(_last_project_window "$project")"
 _tmux_new_window "$project" "$proj_worktree" "$after"
-_launch_agent_in_window "$project" "$persona" "$project_path" "$briefing"
+_launch_agent_in_window "$project" "$persona" "$project_path" "$briefing" "orchestrator" "$proj_worktree"
 
 _orc_goto "$project"

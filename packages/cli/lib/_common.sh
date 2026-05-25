@@ -1531,12 +1531,14 @@ _launch_agent_in_window() {
   local persona="$2"
   local project_path="${3:-}"
   local initial_prompt="${4:-}"
+  local role="${5:-engineer}"
+  local working_dir="${6:-}"
 
   _send_to_window() {
     _tmux_send "$window" "bash $1"
   }
 
-  _build_and_launch _send_to_window "$project_path" "$persona" "$initial_prompt"
+  _build_and_launch _send_to_window "$project_path" "$persona" "$initial_prompt" "$role" "$working_dir"
 }
 
 # Launch an agent in the review pane of a worktree window.

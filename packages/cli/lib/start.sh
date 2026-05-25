@@ -59,7 +59,7 @@ orc_start() {
         # Agent exited — relaunch in the existing window
         _info "Root orchestrator session ended. Relaunching."
         _tmux_set_pane_title "orc" "0" "root orchestrator"
-        _launch_agent_in_window "orc" "$persona" "" "$init_prompt"
+        _launch_agent_in_window "orc" "$persona" "" "$init_prompt" "orchestrator" "$ORC_ROOT"
       else
         _info "Root orchestrator running. Attaching."
       fi
@@ -80,9 +80,9 @@ orc_start() {
     local show_splash
     show_splash="$(_config_get "tui.show_splash" "true")"
     if [[ "$_is_new_session" == "1" && "$show_splash" == "true" ]]; then
-      ORC_SPLASH=1 _launch_agent_in_window "orc" "$persona" "" "$init_prompt"
+      ORC_SPLASH=1 _launch_agent_in_window "orc" "$persona" "" "$init_prompt" "orchestrator" "$ORC_ROOT"
     else
-      _launch_agent_in_window "orc" "$persona" "" "$init_prompt"
+      _launch_agent_in_window "orc" "$persona" "" "$init_prompt" "orchestrator" "$ORC_ROOT"
     fi
     _orc_goto "orc"
   else
@@ -139,8 +139,8 @@ Start by investigating the codebase to understand its structure and current stat
     after="$(_last_project_window "$project")"
     _tmux_new_window "$project" "$proj_worktree" "$after"
     _tmux_set_pane_title "$project" "0" "${project} orchestrator"
-    _launch_agent_in_window "$project" "$persona" "$project_path" "$init_prompt"
-
+    _launch_agent_in_window "$project" "$persona" "$project_path" "$init_prompt" "orchestrator" "$proj_worktree"
+ 
     # --background: don't switch to the window
     [[ "${ORC_BACKGROUND:-0}" != "1" ]] && _orc_goto "$project"
   fi

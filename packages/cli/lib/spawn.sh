@@ -102,7 +102,7 @@ orc_spawn() {
     _tmux_set_pane_id "$window_name" "0" "$eng_label"
     _tmux_set_window_status "$window_name" "●"
 
-    _launch_agent_in_window "$window_name" "$persona" "$project_path" "$init_prompt"
+    _launch_agent_in_window "$window_name" "$persona" "$project_path" "$init_prompt" "engineer" "$worktree"
   fi
 
   _info "Engineer spawned for bead '$bead'${goal:+ (goal: $goal)} in project '$project'."

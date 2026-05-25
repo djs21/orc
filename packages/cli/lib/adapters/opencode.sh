@@ -22,12 +22,14 @@ _adapter_inject_persona() {
     permission_block="permission:
   edit: allow
   bash: allow
-  webfetch: allow"
+  webfetch: allow
+  external_directory: allow"
   else
     permission_block="permission:
   edit: ask
   bash: ask
-  webfetch: ask"
+  webfetch: ask
+  external_directory: allow"
   fi
 
   cat > "$agent_file" <<AGENT_EOF
@@ -39,6 +41,19 @@ ${permission_block}
 
 ${persona_content}
 AGENT_EOF
+
+  local commands_dir="$worktree_path/.opencode/commands"
+  mkdir -p "$commands_dir"
+
+  local canonical_dir="$ORC_ROOT/packages/commands/_canonical"
+  if [[ -d "$canonical_dir" ]]; then
+    for f in "$canonical_dir"/*.md; do
+      [[ -f "$f" ]] || continue
+      local name
+      name="$(basename "$f" .md)"
+      ln -sf "$f" "$commands_dir/orc-${name}.md"
+    done
+  fi
 }
 
 _adapter_build_launch_cmd() {
@@ -56,11 +71,11 @@ _adapter_build_launch_cmd() {
   local cmd="opencode"
   [[ -n "$agent_flags" ]] && cmd="$cmd $agent_flags"
 
-  if [[ -n "$prompt_file" ]]; then
-    # Non-interactive: --agent must follow the run subcommand
-    cmd="$cmd run --agent orc-${role} -q \"\$(cat $prompt_file)\""
+  if [[ -n "$prompt_file" && "$role" == "engineer" ]]; then
+    # Engineers: non-interactive run mode with auto-start
+    cmd="$cmd run --agent orc-${role} \"\$(cat $prompt_file)\""
   else
-    # Interactive TUI with agent selected
+    # Orchestrators/reviewers: interactive TUI mode
     cmd="$cmd --agent orc-${role}"
   fi
   echo "$cmd"

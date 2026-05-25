@@ -561,7 +561,7 @@ ALWAYS present every issue and proposed fix to the user. ALWAYS wait for confirm
     _tmux_send "orc" "$briefing"
   else
     _tmux_new_window "orc" "$ORC_ROOT"
-    _launch_agent_in_window "orc" "$persona" "" "$briefing"
+    _launch_agent_in_window "orc" "$persona" "" "$briefing" "orchestrator" "$ORC_ROOT"
   fi
 
   _orc_goto "orc"
