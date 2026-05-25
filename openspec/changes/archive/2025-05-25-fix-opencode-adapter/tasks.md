@@ -26,7 +26,7 @@
 
 - [x] 5.1 In `_adapter_inject_persona`, after creating the agent file, also symlink orc commands to `{worktree}/.opencode/commands/orc-*.md` (same pattern as `_adapter_install_commands` but targeting the worktree path)
 - [x] 5.2 In `_adapter_post_teardown`, also remove orc command symlinks from `{worktree}/.opencode/commands/orc-*.md`
-- [ ] 5.3 Verify orchestrator in worktree can see `/orc:plan`, `/orc:dispatch`, etc. in opencode
+- [x] 5.3 Verify orchestrator in worktree can see `/orc:plan`, `/orc:dispatch`, etc. in opencode
 
 ## 6. Verify and smoke test
 
