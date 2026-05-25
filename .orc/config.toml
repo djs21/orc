@@ -1,0 +1,7 @@
+[defaults]
+agent_cmd = "opencode"
+
+[models]
+orchestrator = "opencode-go/glm-5.1"
+engineer = "opencode-go/deepseek-v4-flash"
+goal-orchestrator = "opencode-go/kimi-k2.6"
