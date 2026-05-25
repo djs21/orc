@@ -37,6 +37,11 @@ The opencode adapter's `_adapter_inject_persona` SHALL include `external_directo
 - **AND** the agent attempts to read a file at `project/README.md`
 - **THEN** opencode SHALL NOT auto-reject the access
 
+#### Scenario: Agent file includes model field when configured
+- **WHEN** `[models]` config has `orchestrator = "opencode-go/glm-5.1"`
+- **AND** an orchestrator agent file is created
+- **THEN** the YAML front-matter SHALL include `model: opencode-go/glm-5.1` between `mode` and `permission`
+
 ### Requirement: Persona injection must work for all session types
 
 `_launch_agent_in_window` SHALL forward `role` and `working_dir` to `_build_and_launch` so that adapter persona injection hooks (`_adapter_inject_persona`, `_adapter_pre_launch`) are called for all session types, including root orchestrator, project orchestrator, goal orchestrator, and legacy engineer sessions.
