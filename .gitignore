@@ -18,3 +18,14 @@ projects.toml
 
 # pnpm
 pnpm-lock.yaml
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+
+.claude
+.claude/*
+.ocr
+.windsurf
+
