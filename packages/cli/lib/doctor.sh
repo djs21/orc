@@ -37,6 +37,10 @@ tickets.strategy
 notifications.system
 notifications.sound
 updates.check_on_launch
+models.orchestrator
+models.goal-orchestrator
+models.engineer
+models.reviewer
 layout.min_pane_width
 layout.min_pane_height
 board.command
