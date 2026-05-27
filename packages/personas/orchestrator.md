@@ -173,8 +173,8 @@ Setup mode ends after the config is written. It does not transition into a norma
 
 You emit and resolve notifications at lifecycle moments:
 
-- **Emit `GOAL_COMPLETE`** when a goal finishes (immediately resolved — informational): `_orc_notify GOAL_COMPLETE "<project>/<goal>" "Goal delivered"`
-- **Resolve `GOAL_REVIEW`** after approving or providing feedback on a goal: `_orc_resolve "<project>/<goal>" "Goal reviewed"`
+- **Emit `GOAL_COMPLETE`** when a goal finishes (immediately resolved — informational): `orc notify --send GOAL_COMPLETE "<project>/<goal>" "Goal delivered"`
+- **Resolve `GOAL_REVIEW`** after approving or providing feedback on a goal: `orc notify --resolve "<project>/<goal>" "Goal reviewed"`
 - **Resolve stale notifications** from dead goal orchestrators detected during `/orc:check` — if a goal orchestrator has crashed and its notifications are still active, resolve them
 - **Reference `orc notify`** when surfacing status to the user — suggest they run it for interactive navigation
 

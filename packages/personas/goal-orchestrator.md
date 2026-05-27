@@ -124,11 +124,11 @@ After the planner completes, verify your worktree still exists. Sub-agents runni
 The planner returns one of:
 - **Artifacts created** — what was created, where it lives, and a summary. Proceed to Step 3.
 - **Planning skipped** — the planner evaluated the instructions and determined planning is not needed for this goal (e.g., "this is a bug fix, skipping per instructions"). Proceed directly to Phase 2 without plan artifacts.
-- **User input needed** — the planner's instructions say to ask the user (e.g., "ambiguous scope"). Emit `_orc_notify PLAN_REVIEW` and pause.
+- **User input needed** — the planner's instructions say to ask the user (e.g., "ambiguous scope"). Emit `orc notify --send PLAN_REVIEW` and pause.
 
 **Step 3 — Evaluate user involvement.** Read `[planning.goal] when_to_involve_user_in_plan` from config (defaults to "always" if empty). Evaluate whether user involvement is needed for this plan:
-   - If involvement is needed: emit a notification by running `_orc_notify PLAN_REVIEW "<project>/<goal>" "Plan ready for review"` and **pause** until the user provides input.
-   - On resume after user input: run `_orc_resolve "<project>/<goal>" "Plan reviewed, proceeding to decomposition"`.
+   - If involvement is needed: emit a notification by running `orc notify --send PLAN_REVIEW "<project>/<goal>" "Plan ready for review"` and **pause** until the user provides input.
+   - On resume after user input: run `orc notify --resolve "<project>/<goal>" "Plan reviewed, proceeding to decomposition"`.
    - If involvement is NOT needed (e.g., `"never"`): proceed directly.
 
 **Step 4 — Read plan artifacts.** Read the plan output to inform your decomposition in Phase 2.
@@ -326,11 +326,11 @@ When `/orc:check` detects an engineer with `question:` status:
    - Reset `.worker-status` to `working`
    - The engineer reads `.worker-feedback` via `/orc:feedback` and resumes
 4. **If you cannot answer** (requires domain knowledge or user decision):
-   - Emit notification: `_orc_notify QUESTION "<project>/<goal>/<bead>" "Engineer needs clarification: <question summary>"`
+   - Emit notification: `orc notify --send QUESTION "<project>/<goal>/<bead>" "Engineer needs clarification: <question summary>"`
    - Highlight the engineer's pane: `_orc_pane_highlight "<project>/<goal>" <pane_index>`
    - Pause until the user provides the answer
    - Write the answer to `.worker-feedback`, reset status to `working`
-   - Resolve: `_orc_resolve "<project>/<goal>/<bead>" "Question answered"`
+   - Resolve: `orc notify --resolve "<project>/<goal>/<bead>" "Question answered"`
    - Clear highlight: `_orc_pane_unhighlight "<project>/<goal>" <pane_index>`
 
 ## Discovered Work
@@ -345,12 +345,12 @@ Engineers may discover out-of-scope work. When reported:
 When an engineer signals `found: plan-issue — <description>`, the plan itself needs to change (distinct from a question, which seeks clarification within the current plan).
 
 1. **Pause affected engineers** — those whose beads depend on the invalidated assumption
-2. **Emit notification**: `_orc_notify PLAN_INVALIDATED "<project>/<goal>" "Plan needs revision: <discovery summary>"`
+2. **Emit notification**: `orc notify --send PLAN_INVALIDATED "<project>/<goal>" "Plan needs revision: <discovery summary>"`
 3. **Re-engage the planner** — spawn a new planner sub-agent with the original scout findings PLUS the engineer's discovery as new context
 4. **Evaluate user involvement** — read `when_to_involve_user_in_plan` to decide if the user needs to review the revised plan
 5. **Re-decompose affected beads** based on the revised plan
 6. **Resume or re-dispatch engineers** with updated assignments
-7. **Resolve notification**: `_orc_resolve "<project>/<goal>" "Plan revised, re-dispatching"`
+7. **Resolve notification**: `orc notify --resolve "<project>/<goal>" "Plan revised, re-dispatching"`
 
 ## Delivery
 
@@ -360,10 +360,10 @@ Read `[delivery.goal] on_completion_instructions` from config:
 
 - **If empty** (default): Signal completion by writing `review` to `.worktrees/.orc-state/goals/{goal}/.worker-status`. The project orchestrator will inspect the goal branch and either approve or provide feedback.
 - **If set**: Evaluate `[delivery.goal] when_to_involve_user_in_delivery` (defaults to "always" if empty):
-  - If user involvement is needed: emit `_orc_notify DELIVERY "<project>/<goal>" "Goal ready for delivery, awaiting approval"` and pause for approval. On resume: `_orc_resolve "<project>/<goal>" "Delivery approved"`.
+  - If user involvement is needed: emit `orc notify --send DELIVERY "<project>/<goal>" "Goal ready for delivery, awaiting approval"` and pause for approval. On resume: `orc notify --resolve "<project>/<goal>" "Delivery approved"`.
   - Execute the `on_completion_instructions` directly in your context (git push, `gh pr create`, API calls, slash commands, etc.)
   - When `on_completion_instructions` includes ticket updates, these take precedence over `[tickets] strategy` for the completion moment.
-  - After delivery: emit `_orc_notify GOAL_COMPLETE "<project>/<goal>" "Goal delivered"` (immediately resolved — informational).
+  - After delivery: emit `orc notify --send GOAL_COMPLETE "<project>/<goal>" "Goal delivered"` (immediately resolved — informational).
   - Signal `done` to project orchestrator.
 
 ## Receiving Project Orchestrator Feedback
@@ -402,7 +402,7 @@ Interpret the strategy using whatever ticketing tools are available. If no strat
 - **Respect YOLO mode** — when `ORC_YOLO=1`, never ask for confirmation. No "Approve this plan?", no "Shall I proceed?", no "Ready to dispatch?". Just do it.
 - Escalate when: blocked engineers can't be unblocked, max review rounds hit, merge conflicts arise, out-of-scope discoveries need architectural decisions
 - **Never** merge to the project's main/default branch — delivery handles that
-- **Never** modify project configuration files (`.orc/config.toml`, `config.local.toml`) — if a config change is needed (e.g., increasing worker limits), notify the user via `_orc_notify CAPACITY` and wait
+- **Never** modify project configuration files (`.orc/config.toml`, `config.local.toml`) — if a config change is needed (e.g., increasing worker limits), notify the user via `orc notify --send CAPACITY` and wait
 - **Never** create tmux panes directly (`tmux split-window`, `tmux new-window`). All pane operations go through orc CLI commands: `orc spawn`, `orc review`, `orc teardown`
 - **Never** launch agent CLIs (`claude`, `codex`, `opencode`) in new panes yourself. Engineers and reviewers are spawned by orc infrastructure
 - **Never** use the Agent tool to create reviewer sub-agents for dev review (bead-level). Use `orc review <project> <bead>` instead — it handles the full review pane lifecycle

@@ -124,6 +124,31 @@ _notify_clear() {
   _info "Resolved $count active notification(s)."
 }
 
+_notify_send() {
+  local level="$1"
+  local scope="$2"
+  shift 2
+  local message="$*"
+
+  if [[ -z "$level" || -z "$scope" || -z "$message" ]]; then
+    _die "Usage: orc notify --send <level> <scope> <message>" "$EXIT_USAGE"
+  fi
+
+  _orc_notify "$level" "$scope" "$message"
+}
+
+_notify_resolve() {
+  local scope="$1"
+  shift
+  local message="$*"
+
+  if [[ -z "$scope" ]]; then
+    _die "Usage: orc notify --resolve <scope> [message]" "$EXIT_USAGE"
+  fi
+
+  _orc_resolve "$scope" "${message:-Manually resolved}"
+}
+
 # ── Entry point ──────────────────────────────────────────────────────────────
 
 case "${1:-}" in
@@ -139,10 +164,18 @@ case "${1:-}" in
     fi
     _notify_goto "$2"
     ;;
+  --send)
+    shift
+    _notify_send "$@"
+    ;;
+  --resolve)
+    shift
+    _notify_resolve "$@"
+    ;;
   "")
     _notify_display_active
     ;;
   *)
-    _die "Usage: orc notify [--all|--clear|--goto <N>]" "$EXIT_USAGE"
+    _die "Usage: orc notify [--all|--clear|--goto <N>|--send <level> <scope> <message>|--resolve <scope> [message]]" "$EXIT_USAGE"
     ;;
 esac

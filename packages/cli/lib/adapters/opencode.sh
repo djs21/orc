@@ -81,11 +81,16 @@ _adapter_build_launch_cmd() {
   local cmd="opencode"
   [[ -n "$agent_flags" ]] && cmd="$cmd $agent_flags"
 
-  if [[ -n "$prompt_file" && "$role" == "engineer" ]]; then
-    # Engineers: non-interactive run mode with auto-start
-    cmd="$cmd run --agent orc-${role} \"\$(cat $prompt_file)\""
+  if [[ -n "$prompt_file" ]]; then
+    if [[ "$role" == "engineer" ]]; then
+      # Engineers: non-interactive run mode (one-shot, exits after task)
+      cmd="$cmd run --agent orc-${role} \"\$(cat $prompt_file)\""
+    else
+      # Orchestrators/reviewers/planners: TUI mode with --prompt for auto-start
+      cmd="$cmd --agent orc-${role} --prompt \"\$(cat $prompt_file)\""
+    fi
   else
-    # Orchestrators/reviewers: interactive TUI mode
+    # No prompt: plain agent selection
     cmd="$cmd --agent orc-${role}"
   fi
   echo "$cmd"

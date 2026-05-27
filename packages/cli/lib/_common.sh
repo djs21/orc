@@ -547,7 +547,7 @@ _tmux_send() {
   # multi-line input without submitting. No temp files.
   printf '%s' "$cmd" | _orc_tmux load-buffer -
   _orc_tmux paste-buffer -t "$target"
-  sleep 0.15
+  sleep 0.05
   _orc_tmux send-keys -t "$target" Enter
 }
 
@@ -727,7 +727,7 @@ _tmux_send_pane() {
 
   printf '%s' "$cmd" | _orc_tmux load-buffer -
   _orc_tmux paste-buffer -t "$target"
-  sleep 0.15
+  sleep 0.05
   _orc_tmux send-keys -t "$target" Enter
 }
 
@@ -1875,6 +1875,29 @@ _orc_notify_active_list() {
       echo "$line"
     fi
   done < "$log_file"
+}
+
+# Watch a status file for changes, calling a callback on modification.
+# Falls back to polling (every 2s) if inotifywait/fswatch unavailable.
+# Usage: _orc_watch_status <status_file_dir> <callback>
+#   callback receives the file path as argument.
+_orc_watch_status() {
+  local dir="$1"
+  local callback="$2"
+  local target="$dir/.worker-status"
+
+  if command -v inotifywait &>/dev/null; then
+    inotifywait -m -e modify -e create "$target" 2>/dev/null \
+      | while read -r; do "$callback" "$target"; done
+  elif command -v fswatch &>/dev/null; then
+    fswatch -1 "$target" 2>/dev/null \
+      | while read -r; do "$callback" "$target"; done
+  else
+    # Fallback: poll every 2 seconds
+    while sleep 2; do
+      [[ -f "$target" ]] && "$callback" "$target"
+    done
+  fi
 }
 
 # Set a pane's border to the activity color (attention indicator).
