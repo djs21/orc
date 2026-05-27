@@ -312,6 +312,15 @@ _doctor_validate() {
     fi
   fi
 
+  # ── Orphaned session check ──────────────────────────────────────────
+  if tmux has-session -t orc 2>/dev/null; then
+    echo ""
+    _warn "Orphaned 'orc' tmux session found on the default server."
+    _warn "This is likely from a pre-v2 installation. The current orc uses"
+    _warn "an isolated server (tmux -L orc). Run the following to clean up:"
+    _warn "  tmux kill-session -t orc"
+  fi
+
   # ── TUI recommendations (non-blocking) ──────────────────────────────
   local tui_enabled
   tui_enabled="$(_config_get "tui.enabled" "true")"

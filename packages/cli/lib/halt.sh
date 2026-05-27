@@ -40,6 +40,6 @@ if [[ -z "$eng_pane" ]]; then
   # Legacy fallback: try pane 0
   eng_pane=0
 fi
-tmux send-keys -t "$(_tmux_target "$window_name" "$eng_pane")" C-c
+_orc_tmux send-keys -t "$(_tmux_target "$window_name" "$eng_pane")" C-c
 
 _info "Sent interrupt to engineer '$project/$bead'."

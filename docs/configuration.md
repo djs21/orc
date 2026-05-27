@@ -244,6 +244,8 @@ strategy = "Add a comment to Linear issues with the goal branch name"
 
 ### `[layout]` — tmux Pane Management
 
+orc runs in its own isolated tmux server via `-L orc` (socket at `/tmp/tmux-$UID/orc`). All tmux commands in the CLI use the `_orc_tmux()` wrapper which targets this isolated server. Static tmux options are in `packages/cli/lib/orc-tmux.conf`. The user's tmux config, keybindings, and theme are never affected.
+
 Controls when orc creates overflow windows instead of adding more panes.
 
 | Key | Default | Description |

@@ -26,6 +26,39 @@ Always include "Why", concrete examples, default behavior, and reference `orc do
 
 ---
 
+## v0.3.0 — Socket-Isolated tmux Server (Nested tmux)
+
+### Breaking Changes
+
+#### Orc runs in an isolated tmux server
+
+**What:** Orc now runs in its own tmux server via `tmux -L orc` (socket at `/tmp/tmux-$UID/orc`). All tmux commands target this socket through the `_orc_tmux()` wrapper. Config, keybindings, theme, and session management are fully isolated from the user's tmux.
+
+**Why:** Previously, orc shared the user's default tmux server, applying server-level options (theme, keybindings, `base-index`, `renumber-windows`) that leaked into the user's existing tmux sessions. Socket isolation eliminates all leaks.
+
+**Migration:**
+- Run `orc teardown all` BEFORE upgrading (if an orc session is running)
+- After upgrading: if you see an orphaned `orc` session on your default tmux server (from a pre-v0.3.0 installation), run: `tmux kill-session -t orc`
+- `orc doctor` will warn about orphaned sessions
+- `orc start` creates a new isolated server automatically
+- Nested tmux: if you `orc start` from inside your tmux, orc attaches in the current pane (nested). `Ctrl-b d` detaches from orc and returns to your tmux
+
+**Classification:** Mechanical migration — just cleanup the orphaned session.
+
+### New: Static tmux Config File
+
+**What:** Static tmux configuration is extracted from `_common.sh` into `packages/cli/lib/orc-tmux.conf`, loaded once during server creation. Dynamic options (theme colors, keybindings from `config.toml`) remain applied by `_tmux_ensure_session()` at runtime.
+
+### Changed: `orc leave` behavior
+
+**What:** `orc leave` now properly detects whether you're inside the orc tmux server or the user's tmux before detaching.
+
+### New: `orc doctor` orphan server check
+
+**What:** `orc doctor` now checks for orphaned `orc` sessions on the default tmux server (from pre-v0.3.0 installations) and warns the user to clean them up.
+
+---
+
 ## v0.2.14 — Window Chooser & Compact Tabs (2026-03-31)
 
 ### New Capabilities

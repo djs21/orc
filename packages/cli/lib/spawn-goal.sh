@@ -53,7 +53,7 @@ orc_spawn_goal() {
     fi
     # Dead — tear down the window and recreate below
     _info "Goal orchestrator for '$goal' session ended. Relaunching."
-    tmux kill-window -t "$(_tmux_target "$goal_window")" 2>/dev/null || true
+    _orc_tmux kill-window -t "$(_tmux_target "$goal_window")" 2>/dev/null || true
   fi
 
   _check_approval "spawn" "$project_path" || exit "$EXIT_OK"
@@ -81,7 +81,7 @@ orc_spawn_goal() {
 
   # Set layout hook — re-apply main-vertical after any pane split to prevent tiling
   local layout_cmd="select-layout -t ${ORC_TMUX_SESSION}:${goal_window} main-vertical"
-  tmux set-hook -t "${ORC_TMUX_SESSION}:${goal_window}" after-split-window "$layout_cmd" 2>/dev/null || true
+  _orc_tmux set-hook -t "${ORC_TMUX_SESSION}:${goal_window}" after-split-window "$layout_cmd" 2>/dev/null || true
 
   # Launch the goal orchestrator agent in pane 0
   local persona

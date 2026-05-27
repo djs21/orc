@@ -63,7 +63,7 @@ orc_start() {
       else
         _info "Root orchestrator running. Attaching."
       fi
-      _orc_goto "orc"
+      [[ "${ORC_BACKGROUND:-0}" != "1" ]] && _orc_goto "orc"
       return
     fi
 
@@ -84,7 +84,7 @@ orc_start() {
     else
       _launch_agent_in_window "orc" "$persona" "" "$init_prompt" "orchestrator" "$ORC_ROOT"
     fi
-    _orc_goto "orc"
+    [[ "${ORC_BACKGROUND:-0}" != "1" ]] && _orc_goto "orc"
   else
     # ── Project orchestrator ───────────────────────────────────────────
     local project_path
@@ -122,7 +122,7 @@ Start by investigating the codebase to understand its structure and current stat
       if _tmux_is_dead_window "$project"; then
         # Dead — tear down the window and recreate below (ensures correct worktree CWD)
         _info "Orchestrator for '$project' session ended. Relaunching."
-        tmux kill-window -t "$(_tmux_target "$project")" 2>/dev/null || true
+        _orc_tmux kill-window -t "$(_tmux_target "$project")" 2>/dev/null || true
         if _tmux_window_exists "$project"; then
           _die "Failed to remove dead orchestrator window for '$project'." "$EXIT_STATE"
         fi

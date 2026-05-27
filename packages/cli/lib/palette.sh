@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # palette.sh — Command palette for orc TUI navigation layer.
-# Fuzzy-search windows/panes with fzf-tmux popup, or fall back to choose-tree.
+# Fuzzy-search windows/panes with fzf-_orc_tmux popup, or fall back to choose-tree.
 # Navigation-only: never sends input to agent panes.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,7 +24,7 @@ C_YELLOW=$'\033[33m'
 # ── Fallback: choose-tree when fzf is not available ────────────────────────
 
 if ! command -v fzf &>/dev/null; then
-  tmux choose-tree -s -f "#{==:#{session_name},${SESSION}}" \
+  _orc_tmux choose-tree -s -f "#{==:#{session_name},${SESSION}}" \
     -F "#{?@orc_id,#{@orc_id},#{window_name}} #{?@orc_status,#{@orc_status},}"
   exit 0
 fi
@@ -47,7 +47,7 @@ while IFS='|' read -r win_idx win_name; do
     *)       win_role="project-orch" ;;
   esac
 
-  pane_count="$(tmux list-panes -t "${SESSION}:${win_name}" 2>/dev/null | wc -l | tr -d ' ')"
+  pane_count="$(_orc_tmux list-panes -t "${SESSION}:${win_name}" 2>/dev/null | wc -l | tr -d ' ')"
 
   if (( pane_count <= 1 )) || [[ "$win_role" != "goal" ]]; then
     # Icon + role label
@@ -57,14 +57,14 @@ while IFS='|' read -r win_idx win_name; do
 
     role_label="${C_MUTED}${win_role}${C_RESET}"
     name_display="${C_BOLD}${win_name}${C_RESET}"
-    status_icon="$(tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_status 2>/dev/null || true)"
+    status_icon="$(_orc_tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_status 2>/dev/null || true)"
 
     # Tab-separated: field1=icon+role, field2=name, field3=status, field4+=metadata
     entries+="${icon} ${role_label}	${name_display}	${status_icon}	window	${win_name}	"$'\n'
   else
     # Goal window: list individual panes
     while IFS='|' read -r pane_idx pane_title; do
-      orc_id="$(tmux show-option -t "${SESSION}:${win_name}.${pane_idx}" -p -v @orc_id 2>/dev/null || true)"
+      orc_id="$(_orc_tmux show-option -t "${SESSION}:${win_name}.${pane_idx}" -p -v @orc_id 2>/dev/null || true)"
       [[ -z "$orc_id" ]] && orc_id="$pane_title"
 
       case "$orc_id" in
@@ -78,9 +78,9 @@ while IFS='|' read -r win_idx win_name; do
       name_display="${C_BOLD}${win_name}${C_RESET} ${C_MUTED}/${C_RESET} ${short_id}"
 
       entries+="${icon} ${role_label}	${name_display}		pane	${win_name}	${pane_idx}"$'\n'
-    done < <(tmux list-panes -t "${SESSION}:${win_name}" -F '#{pane_index}|#{pane_title}' 2>/dev/null)
+    done < <(_orc_tmux list-panes -t "${SESSION}:${win_name}" -F '#{pane_index}|#{pane_title}' 2>/dev/null)
   fi
-done < <(tmux list-windows -t "$SESSION" -F '#{window_index}|#{window_name}' 2>/dev/null)
+done < <(_orc_tmux list-windows -t "$SESSION" -F '#{window_index}|#{window_name}' 2>/dev/null)
 
 # Quick actions — visually distinct
 entries+="${C_CYAN}◆${C_RESET} ${C_MUTED}action${C_RESET}	${C_BOLD}Status dashboard${C_RESET}		window	status	"$'\n'
@@ -135,8 +135,8 @@ if [[ "$show_preview" == "true" ]]; then
   )
 fi
 
-# fzf-tmux -p creates its own popup with proper TTY handling
-fzf-tmux -p 85%,75% "${fzf_args[@]}" < "$tmpfile" > "$outfile" || true
+# fzf-_orc_tmux -p creates its own popup with proper TTY handling
+fzf-_orc_tmux -p 85%,75% "${fzf_args[@]}" < "$tmpfile" > "$outfile" || true
 
 selected="$(cat "$outfile")"
 [[ -z "$selected" ]] && exit 0
@@ -149,16 +149,16 @@ sel_pane="$(echo "$selected" | awk -F'	' '{print $6}')"
 
 case "$sel_type" in
   window)
-    tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true
+    _orc_tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true
     ;;
   pane)
-    tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true
-    tmux select-pane -t "${SESSION}:${sel_win}.${sel_pane}" 2>/dev/null || true
+    _orc_tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true
+    _orc_tmux select-pane -t "${SESSION}:${sel_win}.${sel_pane}" 2>/dev/null || true
     ;;
   action)
     case "$sel_win" in
       help) "${SCRIPT_DIR}/help.sh" ;;
-      *)    tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true ;;
+      *)    _orc_tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true ;;
     esac
     ;;
 esac

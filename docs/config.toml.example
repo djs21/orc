@@ -21,6 +21,10 @@ reviewer = "opencode-go/deepseek-v4-pro"
 
 # ─── DEFAULTS ─────────────────────────────────────────────────────────────────
 
+# Orc runs in its own isolated tmux server (`-L orc` socket, separate from user's tmux).
+# The socket name is hardcoded as "orc" (see packages/cli/lib/_common.sh:ORC_TMUX_SOCKET).
+# Static tmux options are in packages/cli/lib/orc-tmux.conf.
+
 [defaults]
 agent_cmd = "opencode"
 max_workers = 3

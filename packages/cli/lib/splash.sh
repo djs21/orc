@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# splash.sh — Branded welcome screen for orc tmux sessions.
+# splash.sh — Branded welcome screen for orc _orc_tmux sessions.
 # Compatible with bash 3.2+ (macOS).
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,9 +26,9 @@ version="v${ORC_VERSION}"
 sub_line="${subtitle}  ${version}"
 footer="Press any key to continue"
 
-# Wait for tmux client to attach so pane gets real terminal size
+# Wait for _orc_tmux client to attach so pane gets real terminal size
 for _i in $(seq 1 50); do
-  if tmux list-clients -t "$ORC_TMUX_SESSION" 2>/dev/null | grep -q .; then
+  if _orc_tmux list-clients -t "$ORC_TMUX_SESSION" 2>/dev/null | grep -q .; then
     sleep 0.3
     break
   fi

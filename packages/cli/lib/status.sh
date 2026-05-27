@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# status.sh — Render dashboard or status line for tmux bar.
+# status.sh — Render dashboard or status line for _orc_tmux bar.
 
-# Source _common.sh if not already loaded (standalone for tmux status-right)
+# Source _common.sh if not already loaded (standalone for _orc_tmux status-right)
 if ! declare -f _info &>/dev/null; then
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   source "$SCRIPT_DIR/_common.sh"
@@ -9,13 +9,13 @@ fi
 
 set -euo pipefail
 
-# ── Breadcrumb mode (for tmux status-left) ────────────────────────────────
+# ── Breadcrumb mode (for _orc_tmux status-left) ────────────────────────────────
 
 if [[ "${1:-}" == "--breadcrumb" ]]; then
   # Derive breadcrumb from active window name + pane title
   local_session="${ORC_TMUX_SESSION:-orc}"
-  win_name="$(tmux display-message -t "${local_session}" -p '#{window_name}' 2>/dev/null || echo "")"
-  pane_title="$(tmux display-message -t "${local_session}" -p '#{pane_title}' 2>/dev/null || echo "")"
+  win_name="$(_orc_tmux display-message -t "${local_session}" -p '#{window_name}' 2>/dev/null || echo "")"
+  pane_title="$(_orc_tmux display-message -t "${local_session}" -p '#{pane_title}' 2>/dev/null || echo "")"
 
   accent="$(_config_get "theme.accent" "#00ff88")"
   bg="$(_config_get "theme.bg" "#0d1117")"
@@ -53,7 +53,7 @@ if [[ "${1:-}" == "--breadcrumb" ]]; then
 
   # Truncate from left if too long (preserve rightmost segments)
   max_len=50  # leave room for "⚔ orc" prefix + padding
-  stripped="$(echo "$crumb" | sed 's/#\[[^]]*\]//g')"  # strip tmux color codes for length check
+  stripped="$(echo "$crumb" | sed 's/#\[[^]]*\]//g')"  # strip _orc_tmux color codes for length check
   n=${#segments[@]}
   if (( ${#stripped} > max_len && n >= 2 )); then
     crumb=" #[fg=${fg}]…▸ #[fg=${accent}]${segments[n-2]} #[fg=${fg}]▸ #[fg=${accent}]${segments[n-1]} #[fg=${fg}]▸"
@@ -63,7 +63,7 @@ if [[ "${1:-}" == "--breadcrumb" ]]; then
   exit 0
 fi
 
-# ── Status line mode (for tmux status-right) ──────────────────────────────
+# ── Status line mode (for _orc_tmux status-right) ──────────────────────────────
 
 if [[ "${1:-}" == "--line" ]]; then
   working=0; review=0; blocked=0; dead=0; goals=0
@@ -107,7 +107,7 @@ if [[ "${1:-}" == "--line" ]]; then
       esac
     done
   done
-  # Read theme colors for tmux status-right formatting
+  # Read theme colors for _orc_tmux status-right formatting
   c_accent="$(_config_get "theme.accent" "#00ff88")"
   c_fg="$(_config_get "theme.fg" "#8b949e")"
   c_activity="$(_config_get "theme.activity" "#d29922")"
@@ -313,7 +313,7 @@ ${entry}"
       blocked*)  goal_indicator="✗ blocked" ;;
       done*)     goal_indicator="✓ done" ;;
       unknown)
-        # Fall back to tmux liveness check if no status file exists
+        # Fall back to _orc_tmux liveness check if no status file exists
         if _tmux_window_exists "${key}/${goal_name}" 2>/dev/null; then
           if _tmux_is_dead_window "${key}/${goal_name}" 2>/dev/null; then
             goal_indicator="✗ dead"

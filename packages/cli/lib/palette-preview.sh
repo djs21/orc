@@ -19,12 +19,12 @@ pane="$(echo "$pane" | tr -d '[:space:]')"
 case "$type" in
   pane)
     if [[ -n "$win" && -n "$pane" ]]; then
-      tmux capture-pane -t "${session}:${win}.${pane}" -p -S -30 2>/dev/null || echo "Preview unavailable"
+      _orc_tmux capture-pane -t "${session}:${win}.${pane}" -p -S -30 2>/dev/null || echo "Preview unavailable"
     fi
     ;;
   window)
     if [[ -n "$win" ]]; then
-      tmux capture-pane -t "${session}:${win}" -p -S -30 2>/dev/null || echo "Preview unavailable"
+      _orc_tmux capture-pane -t "${session}:${win}" -p -S -30 2>/dev/null || echo "Preview unavailable"
     fi
     ;;
   *)

@@ -56,9 +56,9 @@ EOF
 
 # ── Parse global flags ──────────────────────────────────────────────────────
 
-# Inherit ORC_YOLO from tmux environment if set (child processes of --yolo sessions)
+# Inherit ORC_YOLO from _orc_tmux environment if set (child processes of --yolo sessions)
 if [[ -n "${TMUX:-}" ]] && [[ "${ORC_YOLO:-}" != "1" ]]; then
-  tmux_yolo="$(tmux show-environment -t "$ORC_TMUX_SESSION" ORC_YOLO 2>/dev/null | grep -v '^-' | cut -d= -f2 || true)"
+  tmux_yolo="$(_orc_tmux show-environment -t "$ORC_TMUX_SESSION" ORC_YOLO 2>/dev/null | grep -v '^-' | cut -d= -f2 || true)"
   [[ "$tmux_yolo" == "1" ]] && export ORC_YOLO=1
 fi
 
@@ -147,7 +147,7 @@ else
   bead="$1"
   window_name="${project}/${bead}"
 
-  if ! tmux has-session -t "$ORC_TMUX_SESSION" 2>/dev/null; then
+  if ! _orc_tmux has-session -t "$ORC_TMUX_SESSION" 2>/dev/null; then
     _die "No orc session running. Start one with: orc" "$EXIT_STATE"
   fi
 
@@ -156,7 +156,7 @@ else
   else
     _error "Worktree '$window_name' not running."
     _info "Active worktrees:"
-    tmux list-windows -t "$ORC_TMUX_SESSION" -F '  #{window_name}' 2>/dev/null \
+    _orc_tmux list-windows -t "$ORC_TMUX_SESSION" -F '  #{window_name}' 2>/dev/null \
       | grep "/" || _info "  (none)"
     exit "$EXIT_STATE"
   fi

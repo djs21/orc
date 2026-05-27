@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # menu.sh — Role-aware context menu for orc TUI navigation layer.
-# Invoked by tmux binding: run-shell "menu.sh <pane_id>"
-# Uses native tmux display-menu — no external dependencies.
+# Invoked by _orc_tmux binding: run-shell "menu.sh <pane_id>"
+# Uses native _orc_tmux display-menu — no external dependencies.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/_common.sh"
@@ -18,13 +18,13 @@ orc_id=""
 window_name=""
 
 if [[ -n "$PANE_ID" ]]; then
-  orc_id="$(tmux show-option -t "$PANE_ID" -p -v @orc_id 2>/dev/null || true)"
-  window_name="$(tmux display-message -t "$PANE_ID" -p '#{window_name}' 2>/dev/null || true)"
+  orc_id="$(_orc_tmux show-option -t "$PANE_ID" -p -v @orc_id 2>/dev/null || true)"
+  window_name="$(_orc_tmux display-message -t "$PANE_ID" -p '#{window_name}' 2>/dev/null || true)"
 fi
 
 # Fallback to pane title if @orc_id not set
 if [[ -z "$orc_id" ]]; then
-  pane_title="$(tmux display-message -t "$PANE_ID" -p '#{pane_title}' 2>/dev/null || true)"
+  pane_title="$(_orc_tmux display-message -t "$PANE_ID" -p '#{pane_title}' 2>/dev/null || true)"
   orc_id="$pane_title"
 fi
 
@@ -164,4 +164,4 @@ esac
 # ── Display the menu ───────────────────────────────────────────────────────
 
 # Always anchor at bottom-left, next to the ⚔ orc logo in the status bar.
-tmux display-menu -T "$menu_title" -x 0 -y S "${MENU_ARGS[@]}"
+_orc_tmux display-menu -T "$menu_title" -x 0 -y S "${MENU_ARGS[@]}"

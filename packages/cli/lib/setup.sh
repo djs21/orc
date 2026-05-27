@@ -173,7 +173,7 @@ persona="$(_resolve_persona "orchestrator" "$project_path")"
 if _tmux_window_exists "$project"; then
   if _tmux_is_dead_window "$project"; then
     # Dead — tear down the window and recreate below (ensures correct worktree CWD)
-    tmux kill-window -t "$(_tmux_target "$project")" 2>/dev/null || true
+    _orc_tmux kill-window -t "$(_tmux_target "$project")" 2>/dev/null || true
     if _tmux_window_exists "$project"; then
       _die "Failed to remove dead orchestrator window for '$project'." "$EXIT_STATE"
     fi

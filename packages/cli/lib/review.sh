@@ -76,7 +76,7 @@ orc_review() {
     # reclaims the vertical space.
     local target
     target="$(_tmux_target "$window_name" "$eng_pane")"
-    tmux split-window -v -l 40% -t "$target" -c "$worktree_dir"
+    _orc_tmux split-window -v -l 40% -t "$target" -c "$worktree_dir"
 
     # Brief pause so the new pane's shell initializes
     sleep 0.5
@@ -85,7 +85,7 @@ orc_review() {
     _tmux_apply_goal_layout "$window_name"
 
     # The new pane is the active one — get its index
-    review_pane="$(tmux display-message -t "$(_tmux_target "$window_name")" -p '#{pane_index}' 2>/dev/null)"
+    review_pane="$(_orc_tmux display-message -t "$(_tmux_target "$window_name")" -p '#{pane_index}' 2>/dev/null)"
   else
     # ── Legacy: engineer owns its own window ──
     window_name="${project}/${bead}"
@@ -96,7 +96,7 @@ orc_review() {
 
     # Kill ALL non-engineering panes (everything except pane 0).
     local stale_panes
-    stale_panes="$(tmux list-panes -t "$(_tmux_target "$window_name")" -F '#{pane_index}' 2>/dev/null \
+    stale_panes="$(_orc_tmux list-panes -t "$(_tmux_target "$window_name")" -F '#{pane_index}' 2>/dev/null \
       | grep -v '^0$' | sort -rn || true)"
     for p in $stale_panes; do
       _tmux_kill_pane "$window_name" "$p"
@@ -129,7 +129,7 @@ orc_review() {
   _tmux_set_pane_title "$window_name" "$review_pane" "$review_label"
 
   # Launch review process BEFORE renaming the window
-  # (renaming changes $window_name which breaks subsequent tmux targeting)
+  # (renaming changes $window_name which breaks subsequent _orc_tmux targeting)
 
   # Build reviewer persona (always used, even with custom review command)
   local persona

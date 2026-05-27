@@ -256,7 +256,11 @@ Delivery is controlled via `[delivery.goal] on_completion_instructions`. When se
 
 ## tmux Layout
 
-All agents in one tmux session (`orc`). Each goal gets its own window with the goal orchestrator as pane 0 (left/main) and engineers splitting in on the right:
+Orc runs in its own isolated tmux server via `-L orc` (socket at `/tmp/tmux-$UID/orc`). This prevents any config, keybinding, or theme leaks to the user's tmux session. All tmux commands in the CLI use the `_orc_tmux()` wrapper (defined in `packages/cli/lib/_common.sh`) which injects `-L orc` before every tmux invocation. Static options live in `packages/cli/lib/orc-tmux.conf`, loaded once during server creation.
+
+When the user runs `orc start` from inside their own tmux, it creates a nested tmux attach in the current pane. The user's prefix controls their outer tmux; `Ctrl-b` controls the inner orc tmux. `Ctrl-b d` detaches from orc and returns to the outer tmux.
+
+All agents run in one tmux session (`orc`) within the isolated server. Each goal gets its own window with the goal orchestrator as pane 0 (left/main) and engineers splitting in on the right:
 
 ```
 orc                              ← Root orchestrator (window)
@@ -276,7 +280,7 @@ When a window cannot fit another pane (below `layout.min_pane_width` or `layout.
 
 ### Pane Navigation
 
-Panes are identified by their titles (`goal: <name>`, `eng: <bead>`, `review: <project>/<bead>`). Use `tmux list-panes -t orc:<window> -F '#{pane_index}:#{pane_title}'` to find specific panes. The review pane splits vertically below its engineer pane (40% height) and is destroyed after each review round.
+Panes are identified by their titles (`goal: <name>`, `eng: <bead>`, `review: <project>/<bead>`). Use `_orc_tmux list-panes -t orc:<window> -F '#{pane_index}:#{pane_title}'` to find specific panes. The review pane splits vertically below its engineer pane (40% height) and is destroyed after each review round.
 
 ### Layout Configuration
 

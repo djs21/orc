@@ -89,7 +89,7 @@ _teardown_bead() {
         fi
       fi
 
-      # If the goal window (or overflow) is now empty, tmux kills it automatically.
+      # If the goal window (or overflow) is now empty, _orc_tmux kills it automatically.
       # Clean up any empty overflow windows that linger.
       local overflow_win
       overflow="$(_tmux_overflow_windows "$goal_window")"
@@ -335,7 +335,7 @@ _teardown_project() {
 
   # Kill any remaining goal windows (pattern: project/<goal> and overflow)
   local remaining_windows
-  remaining_windows="$(tmux list-windows -t "$ORC_TMUX_SESSION" -F '#{window_name}' 2>/dev/null \
+  remaining_windows="$(_orc_tmux list-windows -t "$ORC_TMUX_SESSION" -F '#{window_name}' 2>/dev/null \
     | grep -E "^${project}/[^/]+$" || true)"
   if [[ -n "$remaining_windows" ]]; then
     while IFS= read -r win; do
@@ -382,13 +382,13 @@ _teardown_project() {
 }
 
 _teardown_all() {
-  # Clean up each project FIRST (while tmux is still alive for pane operations)
+  # Clean up each project FIRST (while _orc_tmux is still alive for pane operations)
   for key in $(_project_keys); do
     _teardown_project "$key" 2>/dev/null || _warn "Partial cleanup for '$key' — manual cleanup may be needed."
   done
 
-  # Kill the tmux session AFTER project cleanup is done
-  tmux kill-session -t "$ORC_TMUX_SESSION" 2>/dev/null || true
+  # Kill the _orc_tmux session AFTER project cleanup is done
+  _orc_tmux kill-session -t "$ORC_TMUX_SESSION" 2>/dev/null || true
 
   # Clean up notification log
   local state_dir="$(_orc_state_dir)"

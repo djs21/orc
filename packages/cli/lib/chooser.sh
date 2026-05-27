@@ -23,7 +23,7 @@ C_RED=$'\033[31m'
 # ── Fallback: choose-tree when fzf is not available ────────────────────────
 
 if ! command -v fzf-tmux &>/dev/null; then
-  tmux choose-tree -s -f "#{==:#{session_name},${SESSION}}" \
+  _orc_tmux choose-tree -s -f "#{==:#{session_name},${SESSION}}" \
     -F "#{?@orc_id,#{@orc_id},#{window_name}} #{?@orc_status,#{@orc_status},}"
   exit 0
 fi
@@ -45,7 +45,7 @@ while IFS='|' read -r win_name; do
   case "$win_name" in
     # ── System windows ──
     orc)
-      status_icon="$(tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_status 2>/dev/null || true)"
+      status_icon="$(_orc_tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_status 2>/dev/null || true)"
       entries+="  ${C_ACCENT}⚔${C_RESET} ${C_BOLD}root${C_RESET} ${status_icon}	window	${win_name}	"$'\n'
       ;;
     status)
@@ -61,8 +61,8 @@ while IFS='|' read -r win_name; do
         touch "$group_dir/$local_project"
       fi
 
-      status_icon="$(tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_status 2>/dev/null || true)"
-      short="$(tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_short 2>/dev/null || echo "$win_name")"
+      status_icon="$(_orc_tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_status 2>/dev/null || true)"
+      short="$(_orc_tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_short 2>/dev/null || echo "$win_name")"
       goal_part="${win_name#*/}"
 
       # Board windows (exact match: {project}/board)
@@ -94,10 +94,10 @@ while IFS='|' read -r win_name; do
       echo "    ${C_ACCENT}◆${C_RESET} ${C_BOLD}${short}${C_RESET} ${C_MUTED}${goal_part}${C_RESET}  ${goal_status}	window	${win_name}	" >> "$group_dir/$local_project"
 
       # List panes within goal window
-      pane_count="$(tmux list-panes -t "${SESSION}:${win_name}" 2>/dev/null | wc -l | tr -d ' ')"
+      pane_count="$(_orc_tmux list-panes -t "${SESSION}:${win_name}" 2>/dev/null | wc -l | tr -d ' ')"
       if (( pane_count > 1 )); then
         while IFS='|' read -r pane_idx pane_title; do
-          orc_id="$(tmux show-option -t "${SESSION}:${win_name}.${pane_idx}" -p -v @orc_id 2>/dev/null || true)"
+          orc_id="$(_orc_tmux show-option -t "${SESSION}:${win_name}.${pane_idx}" -p -v @orc_id 2>/dev/null || true)"
           [[ -z "$orc_id" ]] && orc_id="$pane_title"
 
           pane_icon="${C_MUTED}·${C_RESET}"
@@ -109,7 +109,7 @@ while IFS='|' read -r win_name; do
 
           short_id="${orc_id#*: }"
           echo "      └ ${pane_icon} ${C_MUTED}${short_id}${C_RESET}	pane	${win_name}	${pane_idx}" >> "$group_dir/$local_project"
-        done < <(tmux list-panes -t "${SESSION}:${win_name}" -F '#{pane_index}|#{pane_title}' 2>/dev/null)
+        done < <(_orc_tmux list-panes -t "${SESSION}:${win_name}" -F '#{pane_index}|#{pane_title}' 2>/dev/null)
       fi
       ;;
 
@@ -120,7 +120,7 @@ while IFS='|' read -r win_name; do
         project_order+="$local_project"$'\n'
         touch "$group_dir/$local_project"
       fi
-      status_icon="$(tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_status 2>/dev/null || true)"
+      status_icon="$(_orc_tmux show-option -t "${SESSION}:${win_name}" -w -v @orc_status 2>/dev/null || true)"
       # Prepend project orch to its group file (should appear first)
       tmp_prepend="$(mktemp)"
       echo "  ${C_ACCENT}⚔${C_RESET} ${C_BOLD}${win_name}${C_RESET} ${status_icon}	window	${win_name}	" > "$tmp_prepend"
@@ -128,7 +128,7 @@ while IFS='|' read -r win_name; do
       mv "$tmp_prepend" "$group_dir/$local_project"
       ;;
   esac
-done < <(tmux list-windows -t "$SESSION" -F '#{window_name}' 2>/dev/null)
+done < <(_orc_tmux list-windows -t "$SESSION" -F '#{window_name}' 2>/dev/null)
 
 # Assemble entries by project
 while IFS= read -r proj; do
@@ -194,10 +194,10 @@ sel_pane="$(echo "$selected" | awk -F'	' '{print $4}')"
 
 case "$sel_type" in
   window)
-    tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true
+    _orc_tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true
     ;;
   pane)
-    tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true
-    tmux select-pane -t "${SESSION}:${sel_win}.${sel_pane}" 2>/dev/null || true
+    _orc_tmux select-window -t "${SESSION}:${sel_win}" 2>/dev/null || true
+    _orc_tmux select-pane -t "${SESSION}:${sel_win}.${sel_pane}" 2>/dev/null || true
     ;;
 esac
