@@ -6,6 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 After modifying orc's config schema (`config.toml`, `doctor.sh`), CLI commands, or persona files, update `migrations/CHANGELOG.md`. Entry format instructions are in the HTML comment at the top of that file.
 
+## Agent skills
+
+### Issue tracker
+
+Issues tracked via Beads (`bd` CLI, local Dolt DB). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default canonical tags: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CLAUDE.md` at root is the primary domain doc. ADRs in `docs/adr/` when created. See `docs/agents/domain.md`.
+
 ## What Orc Is
 
 Orc is a lightweight SDLC framework for AI coding agents. It orchestrates the full software development lifecycle — **plan, build, review, deliver** — across multiple projects, adapted to each project's tools and workflow. Every lifecycle phase is a configurable hook: users specify *what tool to use* and *when to involve them*, expressed as natural language interpreted by agents.

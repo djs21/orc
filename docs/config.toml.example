@@ -1,0 +1,159 @@
+# Example: orc project config
+# Place at {project}/.orc/config.toml (per-project) or config.local.toml (global overrides)
+# Resolution: {project}/.orc/config.toml > config.local.toml > config.toml
+
+# ─── MODELS ───────────────────────────────────────────────────────────────────
+# Assign AI models per agent role. Unset = use global default.
+# Run `opencode models` to see available models.
+
+# Model assignments:
+#   orchestrator (project orch): deepseek-v4-pro — goal decomposition, cross-project routing
+#   goal-orchestrator: glm-5.1 — spawns planner sub-agent for heavy planning pipeline
+#     Planner inherits this model: grill-me → openspec-propose → writing-plans
+#   engineer: deepseek-v4-flash — fast coding loops, cheap, many review rounds
+#   reviewer: deepseek-v4-pro — coordinates OCR multi-agent review (4+ sub-reviewers)
+
+[models]
+orchestrator = "opencode-go/deepseek-v4-pro"
+goal-orchestrator = "opencode-go/glm-5.1"
+engineer = "opencode-go/deepseek-v4-flash"
+reviewer = "opencode-go/deepseek-v4-pro"
+
+# ─── DEFAULTS ─────────────────────────────────────────────────────────────────
+
+[defaults]
+agent_cmd = "opencode"
+max_workers = 3
+
+# ─── WORKTREE ─────────────────────────────────────────────────────────────────
+
+[worktree]
+setup_instructions = "Run pnpm install. Copy .env from {project_root} if it exists."
+
+# ─── BRANCHING ────────────────────────────────────────────────────────────────
+
+[branching]
+strategy = "Use conventional prefixes: feat/, fix/, task/ + bead ID prefix if available"
+
+# ─── PLANNING ─────────────────────────────────────────────────────────────────
+#
+# Grill-me → Openspec-propose → Writing-plans pipeline:
+#   1. grill-me: stress-test the design with the user
+#   2. openspec-propose: create formal proposal (design, specs, tasks)
+#   3. writing-plans: produce detailed implementation plan from proposal
+#
+# User is always involved at every step.
+
+[planning.goal]
+plan_creation_instructions = """
+1. Load the grill-me skill — stress-test the design with the user until all decision branches are resolved
+2. Load the openspec-propose skill — create a formal proposal with design, specs, and tasks
+3. Load the writing-plans skill (superpowers) — produce a detailed implementation plan from the proposal
+"""
+bead_creation_instructions = """
+Decompose beads from the implementation plan:
+- One bead = 1-3 tightly-related tasks from the plan
+- Each bead must be independently testable (vertical slice)
+- Prefer small beads (< 3 tasks) over large ones
+- Name beads with the task prefix from the plan
+- If the plan has no explicit task list, create one bead per acceptance criterion
+"""
+when_to_involve_user_in_plan = "always"
+
+# ─── DISPATCH ─────────────────────────────────────────────────────────────────
+#
+# Every engineer receives:
+#   - Proposal path + verbatim task description from plan
+#   - Test command and CLAUDE.md reference
+#   - TDD workflow (red-green-refactor)
+#   - Verification before review signal
+#   - Review feedback processing guidance
+
+[dispatch.goal]
+assignment_instructions = """
+Include in every bead assignment:
+- The proposal directory path (if openspec was used)
+- The relevant task description, quoted verbatim from the plan
+- The project's test command: `pnpm test`
+- Reference to CLAUDE.md and .ocr/config.yaml for code conventions
+- Before writing implementation code: load the tdd skill (superpowers), follow red-green-refactor
+- Before signaling review: load the verification-before-completion skill (superpowers), run tests, confirm they pass
+- When processing review feedback: load the receiving-code-review skill (superpowers)
+"""
+
+# ─── APPROVAL ─────────────────────────────────────────────────────────────────
+
+[approval]
+ask_before_dispatching = "ask"
+ask_before_reviewing = "ask"
+ask_before_merging = "ask"
+
+# ─── REVIEW: DEV (BEAD LEVEL) ─────────────────────────────────────────────────
+#
+# Per-bead review after each engineer signals "review".
+# OCR multi-agent review (2x Principal + 2x Quality), no discourse for speed.
+# Pass: 0 Critical + 0 Important. Max 3 rounds.
+
+[review.dev]
+review_instructions = """
+Load the OCR skill (.ocr/skills/SKILL.md) and run the /ocr:review workflow.
+Scope: diff between the bead branch and its parent goal branch.
+Rules: use .ocr/config.yaml — critical/important/consider as defined there.
+Skip the discourse phase for fast per-bead turnaround.
+"""
+how_to_determine_if_review_passed = """
+Check the OCR synthesis output:
+- PASS if: zero Critical issues AND zero Important issues
+- FAIL if: any Critical or Important issue remains
+- Minor (consider) issues are documented but do not block merge
+"""
+how_to_address_review_feedback = """
+1. Fix all Critical and Important findings
+2. Add missing tests if flagged
+3. Rebase bead branch on goal branch
+4. Run `pnpm test`
+5. Re-signal for review
+"""
+max_rounds = 3
+
+# ─── REVIEW: GOAL LEVEL ───────────────────────────────────────────────────────
+#
+# After all beads pass dev review and merge to goal branch.
+# OCR full workflow with discourse. Checks integration + acceptance criteria.
+# Pass: 0 Critical + 0 Important + all acceptance criteria met. Max 3 rounds.
+
+[review.goal]
+review_instructions = """
+Load the OCR skill (.ocr/skills/SKILL.md) and run the /ocr:review workflow.
+Scope: full diff between the goal branch and the base branch.
+Verify all acceptance criteria from the proposal are met.
+Check for integration issues, architectural coherence, and cross-bead regressions.
+Use the full workflow WITH discourse for thorough goal-level review.
+"""
+how_to_determine_if_review_passed = """
+Check the OCR synthesis output:
+- PASS if: zero Critical issues AND zero Important issues AND all acceptance criteria verified
+- FAIL if: any Critical/Important issue remains, OR any acceptance criterion is not met
+- Full test suite (`pnpm test`) must pass with no regressions
+"""
+how_to_address_review_feedback = """
+1. Create corrective beads for each must-fix finding
+2. Wait for corrective beads to pass dev review and merge to goal branch
+3. Re-run full test suite on the goal branch
+4. Re-signal for goal review
+"""
+max_rounds = 3
+
+# ─── DELIVERY ─────────────────────────────────────────────────────────────────
+#
+# After goal review passes. Push, create PR, close beads.
+
+[delivery.goal]
+on_completion_instructions = """
+1. Push the goal branch: `git push -u origin $(git branch --show-current)`
+2. Create a PR: `gh pr create` with bead summary, proposal link, and test plan
+3. Close all beads in this goal: `bd close <id>` for each bead
+4. Run `bd prime` to confirm all beads are closed
+5. Report the PR URL to the user
+"""
+when_to_involve_user_in_delivery = "always"
