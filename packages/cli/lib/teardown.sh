@@ -390,8 +390,17 @@ _teardown_all() {
   # Kill the _orc_tmux session AFTER project cleanup is done
   _orc_tmux kill-session -t "$ORC_TMUX_SESSION" 2>/dev/null || true
 
-  # Clean up notification log
+  # Kill the daemon if running
   local state_dir="$(_orc_state_dir)"
+  if [[ -f "$state_dir/daemon.lock" ]]; then
+    local daemon_pid
+    daemon_pid="$(cat "$state_dir/daemon.lock")"
+    if [[ -n "$daemon_pid" ]] && kill -0 "$daemon_pid" 2>/dev/null; then
+      kill "$daemon_pid" 2>/dev/null || true
+    fi
+  fi
+
+  # Clean up notification log and IPC state
   rm -rf "$state_dir" 2>/dev/null || true
 
   _info "Torn down everything. Clean slate."

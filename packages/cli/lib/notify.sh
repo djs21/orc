@@ -149,6 +149,17 @@ _notify_resolve() {
   _orc_resolve "$scope" "${message:-Manually resolved}"
 }
 
+_notify_wait() {
+  local scope="$1"
+  if [[ -z "$scope" ]]; then
+    _die "Usage: orc notify --wait <scope>" "$EXIT_USAGE"
+  fi
+  
+  _info "Waiting for notifications on scope: $scope..."
+  _orc_wait_for_status "$scope"
+  _info "Woken up."
+}
+
 # ── Entry point ──────────────────────────────────────────────────────────────
 
 case "${1:-}" in
@@ -172,10 +183,14 @@ case "${1:-}" in
     shift
     _notify_resolve "$@"
     ;;
+  --wait)
+    shift
+    _notify_wait "$@"
+    ;;
   "")
     _notify_display_active
     ;;
   *)
-    _die "Usage: orc notify [--all|--clear|--goto <N>|--send <level> <scope> <message>|--resolve <scope> [message]]" "$EXIT_USAGE"
+    _die "Usage: orc notify [--all|--clear|--goto <N>|--send <level> <scope> <message>|--resolve <scope> [message]|--wait <scope>]" "$EXIT_USAGE"
     ;;
 esac

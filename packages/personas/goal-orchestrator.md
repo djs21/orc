@@ -198,14 +198,14 @@ If the feedback is unclear, ask the user for clarification.
 
 ## After Dispatching: Autonomous Monitoring
 
-**After spawning engineers, you MUST immediately begin monitoring them.** Do not wait for the user to run `/orc:check`. Start a monitor loop:
+**After spawning engineers, you MUST immediately begin monitoring them.** Do not use sleep loops or periodic polling. Instead, use the event-driven IPC system:
 
-1. Wait ~30 seconds (let the engineers start working)
-2. Run `/orc:check` to poll all worker statuses
+1. Run `orc notify --wait "<project>/<goal>"`
+   - This command will passively suspend you (0% CPU) until an engineer or reviewer finishes and signals a state change.
+   - It will return instantly when a worker completes its task.
+2. Read the worker statuses to see who finished.
 3. Handle any signals (review, blocked, found, dead)
-4. Wait ~60 seconds
-5. Poll again
-6. Repeat until all active engineers are either done or blocked
+4. Loop back to step 1 (run `orc notify --wait` again) until all active engineers are either done or blocked.
 
 When all beads in the current wave are done:
 - Check `bd ready` for newly unblocked beads

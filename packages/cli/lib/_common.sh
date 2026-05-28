@@ -1771,14 +1771,12 @@ _orc_notify() {
   local scope="$2"
   local message="$3"
 
-  local log_file
-  log_file="$(_orc_notify_log)"
-  mkdir -p "$(dirname "$log_file")"
-
   local timestamp
   timestamp="$(date -u '+%Y-%m-%dT%H:%M:%S')"
 
-  printf '%s %s %s "%s"\n' "$timestamp" "$level" "$scope" "$message" >> "$log_file"
+  # Format: TIMESTAMP|SCOPE|EVENT|MESSAGE
+  local ipc_msg="${timestamp}|${scope}|${level}|${message}"
+  _orc_fifo_write "$ipc_msg"
 
   # OS-level notification (only for condition notifications, not RESOLVED/GOAL_COMPLETE)
   if [[ "$level" != "RESOLVED" && "$level" != "GOAL_COMPLETE" ]]; then
@@ -1787,13 +1785,15 @@ _orc_notify() {
     if [[ "$system_notify" == "true" ]]; then
       local sound_flag=""
       local sound_enabled
-      sound_enabled="$(_config_get "notifications.sound" "false")"
-      if _is_macos && command -v terminal-notifier &>/dev/null; then
-        local tn_args=(-title "orc" -subtitle "$level" -message "$message" -group "orc-$scope")
-        [[ "$sound_enabled" == "true" ]] && tn_args+=(-sound default)
-        terminal-notifier "${tn_args[@]}" &>/dev/null &
-      elif _is_linux && command -v notify-send &>/dev/null; then
-        notify-send "orc — $level" "$message" &>/dev/null &
+      sound_enabled="$(_config_get "notifications.sound" "true")"
+      if [[ "$sound_enabled" == "true" && "$(uname -s)" == "Darwin" ]]; then
+        sound_flag="-sound default"
+      fi
+
+      if command -v terminal-notifier &>/dev/null; then
+        terminal-notifier -title "orc: $scope" -subtitle "[$level]" -message "$message" $sound_flag &>/dev/null || true
+      elif command -v notify-send &>/dev/null; then
+        notify-send "orc: $scope [$level]" "$message" &>/dev/null || true
       fi
     fi
   fi
@@ -2047,4 +2047,70 @@ Use these only when they clearly accelerate your work. Default to normal
 implementation for straightforward tasks. Do not force Ruflo usage when
 standard approaches suffice.
 RUFLO_BLOCK
+}
+
+# ── Orc Daemon & IPC ──────────────────────────────────────────────────────────
+
+_orc_daemon_ensure() {
+  local lock_file
+  lock_file="$(_orc_state_dir)/daemon.lock"
+  
+  if [[ -f "$lock_file" ]] && kill -0 "$(cat "$lock_file")" 2>/dev/null; then
+    return 0
+  fi
+
+  local fifo_file
+  fifo_file="$(_orc_state_dir)/ipc.fifo"
+  
+  rm -f "$fifo_file"
+  mkfifo "$fifo_file" 2>/dev/null || true
+  
+  _orc_tmux run-shell -b "exec ${ORC_ROOT}/packages/cli/lib/daemon.sh"
+  
+  # Brief sleep to let daemon write its lock file
+  sleep 0.05
+}
+
+_orc_wait_for_status() {
+  local scope="$1"
+  local pid_file
+  pid_file="$(_orc_state_dir)/$scope/.worker-pid"
+  
+  mkdir -p "$(dirname "$pid_file")"
+  echo "$$" > "$pid_file"
+  
+  # Define a dummy handler to just wake up
+  _on_wake_up() {
+    # Do nothing, just return to break the wait
+    :
+  }
+  
+  trap "_on_wake_up" SIGUSR1
+  
+  # Wait passively. The & and wait $! allow the trap to interrupt it immediately.
+  sleep 86400 & 
+  local sleep_pid=$!
+  wait $sleep_pid 2>/dev/null || true
+  
+  # Kill the sleep process so it doesn't linger
+  kill "$sleep_pid" 2>/dev/null || true
+  
+  # Remove the pid file
+  rm -f "$pid_file"
+}
+_orc_fifo_write() {
+  local msg="$1"
+  _orc_daemon_ensure
+  
+  local state_dir="$(_orc_state_dir)"
+  local fifo_file="$state_dir/ipc.fifo"
+  
+  # Try to write to FIFO with 0.1s timeout
+  if ! timeout 0.1 sh -c "echo '$msg' > '$fifo_file'" 2>/dev/null; then
+    # Fallback to queue
+    local queue_dir="$state_dir/queue"
+    mkdir -p "$queue_dir"
+    local msg_id="$(date +%s%N)"
+    echo "$msg" > "$queue_dir/$msg_id.msg"
+  fi
 }
