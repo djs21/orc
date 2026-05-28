@@ -26,8 +26,9 @@ Usage:
   orc <project>                   Project orchestrator (create or attach)
   orc <project> <bead>            Attach to worktree (engineering plane)
 
-Admin:
-  init                            First-time setup + install slash commands
+  Admin:
+    init                            First-time setup + install slash commands
+    reinit                          Reinitialize orchestrator and fix worktrees
   add <key> <path>                Register a project
   remove <key>                    Unregister a project
   list                            Show registered projects
